@@ -38,7 +38,8 @@ const userSchema = new mongoose.Schema({
   wins: { type: Number, default: 0 },
 });
 
-const User = mongoose.models.User || mongoose.model("User", userSchema);
+// Fix for Vercel/TypeScript/Mongoose model re-declaration
+const User = (mongoose.models.User as mongoose.Model<any>) || mongoose.model("User", userSchema);
 
 app.use(bodyParser.json());
 
