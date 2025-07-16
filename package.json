@@ -1,14 +1,14 @@
 {
   "name": "game-lobby-system-backend",
   "version": "1.0.0",
-  "main": "dist/api/index.js",
+  "main": "dist/app.js",
   "license": "MIT",
   "scripts": {
     "build": "rimraf dist && npx tsc",
     "prestart": "npm run build",
-    "start": "node dist/api/index.js",
+    "start": "node dist/app.js",
     "preserve": "npm run build",
-    "serve": "concurrently \"npx tsc -w\" \"npx nodemon dist/api/index.js\" ",
+    "serve": "concurrently \"npx tsc -w\" \"npx nodemon dist/app.js\" ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

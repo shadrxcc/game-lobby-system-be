@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import connectDB from "../config/db";
+import connectDB from "./config/db";
 import dotenv from "dotenv";
 dotenv.config();
 
