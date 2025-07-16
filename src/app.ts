@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import cors from "cors";
 import connectDB from "./config/db";
 import dotenv from "dotenv";
 dotenv.config();
@@ -19,6 +20,10 @@ declare global {
 }
 
 const app = express();
+
+app.use(cors({
+  origin: "*",
+}));
 
 let currentSession = {
   isActive: false,

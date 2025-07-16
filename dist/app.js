@@ -7,12 +7,16 @@ const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const cors_1 = __importDefault(require("cors"));
 const db_1 = __importDefault(require("./config/db"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 (0, db_1.default)();
 const app = (0, express_1.default)();
+app.use((0, cors_1.default)({
+    origin: "*",
+}));
 let currentSession = {
     isActive: false,
     startedAt: null,
