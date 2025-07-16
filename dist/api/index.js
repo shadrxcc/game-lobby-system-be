@@ -156,5 +156,9 @@ app.get("/session/leaderboard", authenticateJWT, async (_req, res) => {
 app.get("/", (req, res) => {
     res.send("Game Lobby Backend Running!");
 });
-exports.default = app;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+module.exports = app;
 //# sourceMappingURL=index.js.map
