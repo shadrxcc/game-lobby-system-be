@@ -8,6 +8,8 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const db_1 = __importDefault(require("../config/db"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 (0, db_1.default)();
 const app = (0, express_1.default)();
