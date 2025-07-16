@@ -2,6 +2,11 @@ import express from "express";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import connectDB from "./config/db";
+
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+
+connectDB();
 
 declare global {
   namespace Express {
@@ -12,8 +17,6 @@ declare global {
 }
 
 const app = express();
-const PORT = 3000;
-const JWT_SECRET = "supersecretkey";
 
 let currentSession = {
   isActive: false,
@@ -22,14 +25,6 @@ let currentSession = {
   players: [] as Array<{ username: string; pick: number }>,
   winningNumber: null as null | number,
 };
-
-mongoose
-  .connect("mongodb://localhost:27017/game-lobby", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  } as any)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -89,6 +84,10 @@ function startSession(durationSeconds: number = 20) {
   }, durationSeconds * 1000);
 }
 
+if (!currentSession.isActive) {
+  startSession();
+}
+
 app.post("/register", async (req, res) => {
   const { username } = req.body;
   if (!username || typeof username !== "string") {
@@ -131,7 +130,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/session", (req, res) => {
+app.get("/session", (_req, res) => {
   res.json({
     isActive: currentSession.isActive,
     timeLeft: currentSession.isActive
@@ -167,23 +166,25 @@ app.post("/session/join", authenticateJWT, (req, res) => {
 
 app.get("/session/results", authenticateJWT, (req, res) => {
   if (!currentSession.isActive) {
-    return res.status(400).json({error: "No active session buddy!"})
+    return res.status(400).json({ error: "No active session buddy!" });
   }
 
   res.json({
     winningNumber: currentSession.winningNumber,
     players: currentSession.players,
-    winners: currentSession.players.filter((player)=> player.pick === currentSession.winningNumber)
-  })
-})
+    winners: currentSession.players.filter(
+      (player) => player.pick === currentSession.winningNumber
+    ),
+  });
+});
 
-app.get("/session/leaderboard", authenticateJWT, async (req, res) => {
+app.get("/session/leaderboard", authenticateJWT, async (_req, res) => {
   try {
-    const users = await User.find().sort({wins: -1}).limit(10);
-    res.json({leaderboard: users})
+    const users = await User.find().sort({ wins: -1 }).limit(10);
+    res.json({ leaderboard: users });
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
-    res.status(500).json({error: "Failed to fetch leaderboard"})
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
 
@@ -191,8 +192,4 @@ app.get("/", (req, res) => {
   res.send("Game Lobby Backend Running!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-startSession();
+export default app; 

@@ -7,9 +7,10 @@ const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const db_1 = __importDefault(require("./config/db"));
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+(0, db_1.default)();
 const app = (0, express_1.default)();
-const PORT = 3000;
-const JWT_SECRET = "supersecretkey";
 let currentSession = {
     isActive: false,
     startedAt: null,
@@ -17,13 +18,6 @@ let currentSession = {
     players: [],
     winningNumber: null,
 };
-mongoose_1.default
-    .connect("mongodb://localhost:27017/game-lobby", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.error("MongoDB connection error:", err));
 const userSchema = new mongoose_1.default.Schema({
     username: { type: String, required: true, unique: true },
     wins: { type: Number, default: 0 },
@@ -63,6 +57,9 @@ function startSession(durationSeconds = 20) {
             await User.updateOne({ username: winner.username }, { $inc: { wins: 1 } });
         }
     }, durationSeconds * 1000);
+}
+if (!currentSession.isActive) {
+    startSession();
 }
 app.post("/register", async (req, res) => {
     const { username } = req.body;
@@ -106,7 +103,7 @@ app.post("/login", async (req, res) => {
         res.status(500).json({ error: "Login failed" });
     }
 });
-app.get("/session", (req, res) => {
+app.get("/session", (_req, res) => {
     res.json({
         isActive: currentSession.isActive,
         timeLeft: currentSession.isActive
@@ -141,10 +138,10 @@ app.get("/session/results", authenticateJWT, (req, res) => {
     res.json({
         winningNumber: currentSession.winningNumber,
         players: currentSession.players,
-        winners: currentSession.players.filter((player) => player.pick === currentSession.winningNumber)
+        winners: currentSession.players.filter((player) => player.pick === currentSession.winningNumber),
     });
 });
-app.get("/session/leaderboard", authenticateJWT, async (req, res) => {
+app.get("/session/leaderboard", authenticateJWT, async (_req, res) => {
     try {
         const users = await User.find().sort({ wins: -1 }).limit(10);
         res.json({ leaderboard: users });
@@ -157,8 +154,5 @@ app.get("/session/leaderboard", authenticateJWT, async (req, res) => {
 app.get("/", (req, res) => {
     res.send("Game Lobby Backend Running!");
 });
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
-startSession();
+exports.default = app;
 //# sourceMappingURL=app.js.map
