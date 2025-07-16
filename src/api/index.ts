@@ -2,9 +2,11 @@ import express from "express";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import connectDB from "../config/db";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/game-lobby";
+
+connectDB();
 
 declare global {
   namespace Express {
@@ -24,22 +26,12 @@ let currentSession = {
   winningNumber: null as null | number,
 };
 
-if (mongoose.connection.readyState === 0) {
-  mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  } as any)
-    .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.error("MongoDB connection error:", err));
-}
-
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   wins: { type: Number, default: 0 },
 });
 
-// Fix for Vercel/TypeScript/Mongoose model re-declaration
-const User = (mongoose.models.User as mongoose.Model<any>) || mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 
 app.use(bodyParser.json());
 

@@ -2,7 +2,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { error } from "console";
 
 declare global {
   namespace Express {
