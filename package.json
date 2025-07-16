@@ -6,9 +6,9 @@
   "scripts": {
     "build": "rimraf dist && npx tsc",
     "prestart": "npm run build",
-    "start": "node dist/server.js",
+    "start": "node dist/app.js",
     "preserve": "npm run build",
-    "serve": "concurrently \"npx tsc -w\" \"npx nodemon dist/server.js\" ",
+    "serve": "concurrently \"npx tsc -w\" \"npx nodemon dist/app.js\" ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
