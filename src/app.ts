@@ -3,6 +3,8 @@ import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import connectDB from "./config/db";
+import dotenv from "dotenv";
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
