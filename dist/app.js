@@ -156,6 +156,9 @@ app.post("/session/pick", authenticateJWT, (req, res) => {
 app.get("/session/status", authenticateJWT, (req, res) => {
     const username = req.user.username;
     const player = currentSession.players.find(p => p.username === username);
+    const nextSessionStart = currentSession.isActive
+        ? null
+        : (currentSession.endsAt || 0) + 10000;
     res.json({
         isActive: currentSession.isActive,
         timeLeft: currentSession.isActive
@@ -165,6 +168,7 @@ app.get("/session/status", authenticateJWT, (req, res) => {
         players: currentSession.players.length,
         hasPicked: player?.pick !== null,
         pick: player?.pick || null,
+        nextSessionStart: nextSessionStart ? Math.max(0, Math.floor((nextSessionStart - Date.now()) / 1000)) : null,
     });
 });
 app.get("/session/results", authenticateJWT, (req, res) => {
