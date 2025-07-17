@@ -91,7 +91,7 @@ function startSession(durationSeconds: number = 20) {
 
     setTimeout(() => {
       startSession();
-    }, 5000);
+    }, 10000);
   }, durationSeconds * 1000);
 }
 

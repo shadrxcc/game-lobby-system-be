@@ -64,7 +64,7 @@ function startSession(durationSeconds = 20) {
         }
         setTimeout(() => {
             startSession();
-        }, 5000);
+        }, 10000);
     }, durationSeconds * 1000);
 }
 if (!currentSession.isActive) {
