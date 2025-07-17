@@ -181,6 +181,16 @@ app.get("/session/results", authenticateJWT, (req, res) => {
         winners: currentSession.players.filter((player) => player.pick === currentSession.winningNumber),
     });
 });
+app.get("/session/completed-results", authenticateJWT, (req, res) => {
+    if (currentSession.winningNumber === null) {
+        return res.status(400).json({ error: "No completed session results available!" });
+    }
+    res.json({
+        winningNumber: currentSession.winningNumber,
+        players: currentSession.players,
+        winners: currentSession.players.filter((player) => player.pick === currentSession.winningNumber),
+    });
+});
 app.get("/session/leaderboard", authenticateJWT, async (_req, res) => {
     try {
         const users = await User.find().sort({ wins: -1 }).limit(10);
