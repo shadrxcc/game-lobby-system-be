@@ -62,7 +62,6 @@ function startSession(durationSeconds = 20) {
         for (const winner of winners) {
             await User.updateOne({ username: winner.username }, { $inc: { wins: 1 } });
         }
-        // Auto-start the next session after a 5eak
         setTimeout(() => {
             startSession();
         }, 5000);
@@ -126,6 +125,17 @@ app.post("/session/join", authenticateJWT, (req, res) => {
     if (!currentSession.isActive) {
         return res.status(400).json({ error: "No active session buddy!" });
     }
+    const username = req.user.username;
+    if (currentSession.players.some((player) => player.username === username)) {
+        return res.status(400).json({ error: "You've already joined the session buddy!" });
+    }
+    currentSession.players.push({ username, pick: null });
+    res.json({ message: "You've joined the session buddy!" });
+});
+app.post("/session/pick", authenticateJWT, (req, res) => {
+    if (!currentSession.isActive) {
+        return res.status(400).json({ error: "No active session buddy!" });
+    }
     const { pick } = req.body;
     const username = req.user.username;
     if (typeof pick !== "number" || pick < 1 || pick > 10) {
@@ -133,13 +143,28 @@ app.post("/session/join", authenticateJWT, (req, res) => {
             error: "Invalid pick buddy! Pick must be a number between 1 and 10!",
         });
     }
-    if (currentSession.players.some((player) => player.username === username)) {
-        return res
-            .status(400)
-            .json({ error: "You've already joined the session buddy!" });
+    const player = currentSession.players.find(p => p.username === username);
+    if (!player) {
+        return res.status(400).json({ error: "You haven't joined this session!" });
     }
-    currentSession.players.push({ username, pick });
-    res.json({ message: "You've joined the session buddy!" });
+    if (player.pick !== null) {
+        return res.status(400).json({ error: "You've already picked a number!" });
+    }
+    player.pick = pick;
+    res.json({ message: "Number picked successfully!" });
+});
+app.get("/session/status", authenticateJWT, (req, res) => {
+    const username = req.user.username;
+    const player = currentSession.players.find(p => p.username === username);
+    res.json({
+        isActive: currentSession.isActive,
+        timeLeft: currentSession.isActive
+            ? Math.max(0, Math.floor((currentSession.endsAt - Date.now()) / 1000))
+            : 0,
+        hasJoined: !!player,
+        hasPicked: player?.pick !== null,
+        pick: player?.pick || null,
+    });
 });
 app.get("/session/results", authenticateJWT, (req, res) => {
     if (!currentSession.isActive) {
