@@ -23,12 +23,28 @@ let currentSession = {
     endsAt: null,
     players: [],
     winningNumber: null,
+    sessionId: null,
 };
 const userSchema = new mongoose_1.default.Schema({
     username: { type: String, required: true, unique: true },
     wins: { type: Number, default: 0 },
 });
+const sessionSchema = new mongoose_1.default.Schema({
+    sessionId: { type: String, required: true },
+    startedAt: { type: Date, required: true },
+    endedAt: { type: Date, required: true },
+    players: [{
+            username: { type: String, required: true },
+            pick: { type: Number, required: true }
+        }],
+    winningNumber: { type: Number, required: true },
+    winners: [{
+            username: { type: String, required: true },
+            pick: { type: Number, required: true }
+        }]
+}, { timestamps: true });
 const User = mongoose_1.default.model("User", userSchema);
+const Session = mongoose_1.default.model("Session", sessionSchema);
 app.use(body_parser_1.default.json());
 function generateToken(username) {
     return jsonwebtoken_1.default.sign({ username }, JWT_SECRET, { expiresIn: "1h" });
@@ -47,12 +63,14 @@ function authenticateJWT(req, res, next) {
 }
 function startSession(durationSeconds = 20) {
     const now = Date.now();
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     currentSession = {
         isActive: true,
         startedAt: now,
         endsAt: now + durationSeconds * 1000,
         players: [],
         winningNumber: null,
+        sessionId: sessionId,
     };
     setTimeout(async () => {
         currentSession.isActive = false;
@@ -61,6 +79,21 @@ function startSession(durationSeconds = 20) {
         const winners = currentSession.players.filter((player) => player.pick === winner);
         for (const winner of winners) {
             await User.updateOne({ username: winner.username }, { $inc: { wins: 1 } });
+        }
+        try {
+            const sessionData = {
+                sessionId: currentSession.sessionId,
+                startedAt: new Date(currentSession.startedAt),
+                endedAt: new Date(currentSession.endsAt),
+                players: currentSession.players.filter(p => p.pick !== null),
+                winningNumber: currentSession.winningNumber,
+                winners: winners
+            };
+            await Session.create(sessionData);
+            console.log(`Session ${currentSession.sessionId} saved to database`);
+        }
+        catch (error) {
+            console.error('Error saving session to database:', error);
         }
         setTimeout(() => {
             startSession();
@@ -198,14 +231,29 @@ app.post("/session/leave", authenticateJWT, (req, res) => {
 });
 app.get("/session/leaderboard", authenticateJWT, async (_req, res) => {
     try {
-        const users = await User.find().sort({ wins: -1 }).limit(10);
-        res.json({ leaderboard: users });
+        const topPlayers = await User.find()
+            .sort({ wins: -1 })
+            .limit(10)
+            .select('username wins -_id');
+        res.json({ leaderboard: topPlayers });
     }
     catch (error) {
         console.error("Error fetching leaderboard:", error);
         res.status(500).json({ error: "Failed to fetch leaderboard" });
     }
 });
+// app.get("/sessions/history", authenticateJWT, async (req, res) => {
+//   try {
+//     const recentSessions = await Session.find()
+//       .sort({ createdAt: -1})
+//       .limit(10)
+//       .select('sessionId startedAt endedAt winningNumber players winners -_id');
+//     res.json({ sessions: recentSessions });
+//   } catch (error) {
+//     console.error("Error fetching session history:", error);
+//     res.status(500).json({ error: "Failed to fetch session history" });
+//   }
+// });
 app.get("/", (req, res) => {
     res.send("Game Lobby Backend Running!");
 });
