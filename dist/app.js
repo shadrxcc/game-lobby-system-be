@@ -162,6 +162,7 @@ app.get("/session/status", authenticateJWT, (req, res) => {
             ? Math.max(0, Math.floor((currentSession.endsAt - Date.now()) / 1000))
             : 0,
         hasJoined: !!player,
+        players: currentSession.players.length,
         hasPicked: player?.pick !== null,
         pick: player?.pick || null,
     });
