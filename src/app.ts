@@ -88,6 +88,11 @@ function startSession(durationSeconds: number = 20) {
         { $inc: { wins: 1 } }
       );
     }
+
+    // Auto-start the next session after a 5eak
+    setTimeout(() => {
+      startSession();
+    }, 5000);
   }, durationSeconds * 1000);
 }
 
@@ -137,7 +142,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/session", (_req, res) => {
+app.get("/session", authenticateJWT, (_req, res) => {
   res.json({
     isActive: currentSession.isActive,
     timeLeft: currentSession.isActive

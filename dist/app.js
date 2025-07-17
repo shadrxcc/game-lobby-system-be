@@ -62,6 +62,10 @@ function startSession(durationSeconds = 20) {
         for (const winner of winners) {
             await User.updateOne({ username: winner.username }, { $inc: { wins: 1 } });
         }
+        // Auto-start the next session after a 5eak
+        setTimeout(() => {
+            startSession();
+        }, 5000);
     }, durationSeconds * 1000);
 }
 if (!currentSession.isActive) {
@@ -109,7 +113,7 @@ app.post("/login", async (req, res) => {
         res.status(500).json({ error: "Login failed" });
     }
 });
-app.get("/session", (_req, res) => {
+app.get("/session", authenticateJWT, (_req, res) => {
     res.json({
         isActive: currentSession.isActive,
         timeLeft: currentSession.isActive
